@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Checker 😎</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(to right, #74ebd5, #ACB6E5);
+      transition: background 0.5s;
+    }
+    h1 {
+      font-size: 2rem;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      margin: 5px;
+    }
+    input {
+      width: 80%;
+      max-width: 300px;
+    }
+    button {
+      background-color: #fff;
+      color: #333;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #f0f0f0;
+    }
+    #loadingBar {
+      width: 80%;
+      max-width: 300px;
+      height: 20px;
+      background-color: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      display: none;
+      margin: 20px auto;
+    }
+    #progress {
+      height: 100%;
+      width: 0;
+      background-color: #4CAF50;
+      transition: width 2s ease-in-out;
+    }
+    #scanText {
+      font-size: 1rem;
+      margin-top: 10px;
+      color: white;
+      display: none;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    #popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.5);
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      z-index: 10;
+      animation: popIn 0.3s ease-out forwards;
+    }
+    @keyframes popIn {
+      to {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.3);
+      display: none;
+      z-index: 5;
+    }
+    #footer {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .hamburger {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 30px;
+      height: 25px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      z-index: 15;
+    }
+    .bar {
+      height: 4px;
+      background-color: white;
+      border-radius: 2px;
+    }
+    .menu {
+      position: absolute;
+      top: 60px;
+      left: 20px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 12;
+      animation: slideDown 0.3s ease forwards;
+    }
+    .menu a {
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+    }
+    @keyframes slideDown {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hamburger" onclick="toggleMenu()">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+  <div class="menu" id="menu">
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Contact</a>
+  </div>
+
+  <h1>Enter Your Location to Check the Weather 🌤️</h1>
+  <input type="text" id="locationInput" placeholder="e.g., Moshi, Mars, Moon...">
+  <button onclick="checkWeather()">Check Weather</button>
+
+  <div id="loadingBar">
+    <div id="progress"></div>
+  </div>
+  <div id="scanText">🔍 Scanning Clouds...</div>
+
+  <div id="overlay"></div>
+  <div id="popup">
+    <p id="popupText" style="font-size: 1.5rem;">JUST CHECK OUTSIDE 😎</p>
+    <button onclick="closePopup()">OK</button>
+  </div>
+
+  <audio id="voice" src="https://actions.google.com/sounds/v1/human_voices/man_speaking_just_check_outside.ogg"></audio>
+
+  <div id="footer">
+    &copy; 2025 Fun Weather Prank App by Jgrafix. All rights reserved.
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById("menu");
+      menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+    }
+
+    function checkWeather() {
+      const input = document.getElementById("locationInput");
+      const location = input.value.trim().toLowerCase();
+      const loadingBar = document.getElementById("loadingBar");
+      const progress = document.getElementById("progress");
+      const scanText = document.getElementById("scanText");
+      const popupText = document.getElementById("popupText");
+      const voice = document.getElementById("voice");
+      const body = document.body;
+
+      if (!location) return;
+
+      const jokes = [
+        "Weather forecast? Ask your grandma.",
+        "Weather AI is tired today. Try tomorrow.",
+        "404: Weather info not found. Try looking up!",
+        "We asked the clouds. They said 'figure it out!'"
+      ];
+      const joke = jokes[Math.floor(Math.random() * jokes.length)];
+
+      if (location.includes("moon")) {
+        body.style.background = "linear-gradient(to right, #d7d2cc, #304352)";
+        popupText.textContent = "IT'S ALWAYS NIGHT THERE 🌚";
+        voice.src = "https://actions.google.com/sounds/v1/ambiences/moon_base.ogg";
+      } else if (location.includes("heaven")) {
+        body.style.background = "linear-gradient(to right, #f8ffae, #43c6ac)";
+        popupText.textContent = "SORRY, CONNECTION LOST TO HEAVEN ☁️📡";
+        voice.src = "https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg";
+      } else if (location.includes("hell")) {
+        body.style.background = "linear-gradient(to right, #ff512f, #dd2476)";
+        popupText.textContent = "TOO HOT TO HANDLE 🔥🔥🔥";
+        voice.src = "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg";
+      } else {
+        body.style.background = `linear-gradient(to right, hsl(${Math.random()*360}, 80%, 70%), hsl(${Math.random()*360}, 80%, 70%))`;
+        popupText.textContent = joke;
+        voice.src = "https://actions.google.com/sounds/v1/human_voices/man_speaking_just_check_outside.ogg";
+      }
+
+      loadingBar.style.display = "block";
+      scanText.style.display = "block";
+      progress.style.width = "0";
+
+      setTimeout(() => {
+        progress.style.width = "100%";
+      }, 100);
+
+      setTimeout(() => {
+        document.getElementById("overlay").style.display = "block";
+        const popup = document.getElementById("popup");
+        popup.style.display = "block";
+        popup.style.animation = "popIn 0.3s ease-out forwards";
+        voice.play();
+        input.value = "";
+        loadingBar.style.display = "none";
+        progress.style.width = "0";
+        scanText.style.display = "none";
+      }, 3000);
+    }
+
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+      document.getElementById("overlay").style.display = "none";
+    }
+
+    document.addEventListener('click', function(event) {
+      const menu = document.getElementById('menu');
+      const hamburger = document.querySelector('.hamburger');
+      if (!menu.contains(event.target) && !hamburger.contains(event.target)) {
+        menu.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
